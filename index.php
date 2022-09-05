@@ -39,7 +39,7 @@
                         is_dir($value) ? $fileType = "Directory" : $fileType = "File";
                         print("<tr><td>$fileType</td>");
                         print("<td>");
-                        is_dir($value) ? print ('<a href="' . $dir . '?path=/' . $value . '">') . $value . '</a>' : print($value);
+                        is_dir($value) ? print ('<a href="' . $dir . '?path=/' . $value . '">' . $value . '</a>') : print($value);
                         print("</td>");
 
                         print('<td><button class="btn btn-primary">Delete</button></td>');
@@ -60,9 +60,10 @@
 
 <?php
 print('<br>');
-print_r($files);
+print_r($uri);
 print('<br>');
 print('<br>');
+print_r($dir);
 print('<br>');
 print('<pre>');
 // $_SERVER['QUERY_STRING'] = "/?xx";
