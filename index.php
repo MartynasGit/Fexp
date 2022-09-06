@@ -2,7 +2,24 @@
 
 declare(strict_types=1);
 require_once('lib.php');
+$uri = $_SERVER['REQUEST_URI'];
+$dir = isset($_GET['path']) ? "./" . $_GET['path'] : "./";
 
+
+if (isset($_POST['newFolder']) && $_POST['newFolder'] !== "") {
+    mkdir($dir . '/' . $_POST['newFolder']);
+    // echo '<h1>' . $_POST['newFolder'] . '</h1>';
+};
+
+if (isset($_POST['delete']) && $_POST['delete'] !== "") {
+    $delItem = $_POST['delete'];
+    echo '<h1> Deleted' . $_POST['delete'] . '</h1>';
+    if($delItem !== "./index.php" && $delItem !== "./README.MD" && $delItem !== "./lib.php" ){
+        unlink($delItem);
+    }
+};
+
+$files = scandir($dir);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -35,11 +52,6 @@ require_once('lib.php');
             </thead>
             <tbody>
                 <?php
-                $uri = $_SERVER['REQUEST_URI'];
-                $dir = isset($_GET['path']) ? "./" . $_GET['path'] : "./";
-
-                $files = scandir($dir);
-
                 foreach ($files as $value) {
                     if ($value != "." and $value != "..") {
                         // var_dump($dir . $value);
@@ -47,13 +59,16 @@ require_once('lib.php');
                         $isDir = is_dir($dir . '/' . $value) ? 'Directory' : 'File';
                         print("<tr><td>" . $isDir . "</td>");
                         $linkValue = ($_SERVER['QUERY_STRING'] === "")
-                            ? '<a href="' . './?'  . 'path=' . $value . '">' . $value . '</a>'
-                            : '<a href="' . './?' . $_SERVER['QUERY_STRING'] . '/' . $value . '">' . $value . '</a>';
+                            ? '<a href="' . $uri . '?path=' . $value . '">' . $value . '</a>'
+                            : '<a href="' . $uri . '/' . $value . '">' . $value . '</a>';
                         print("<td>");
                         is_dir($dir . '/' . $value) ? print($linkValue) : print($value);
                         print("</td>");
                         !is_dir($dir . '/' . $value)
-                            ? print('<td><button class="btn btn-primary">Delete</button></td>')
+                            ? print('<td><form method="post">
+                            <input class="btn btn-primary" type="submit" value="delete">
+                            <input type="hidden" value="' . $dir . $value .'" name="delete">
+                            </form></td>')
                             : print("<td></td>");
                         print('</tr>');
                     }
@@ -63,7 +78,7 @@ require_once('lib.php');
         </table>
 
         <?php
-
+        //
         if (isset($_GET['path'])) {
             $paths = explode('/', $_GET['path']);
             $lastPath = end($paths);
@@ -73,13 +88,8 @@ require_once('lib.php');
                 print('<a href="' . $files[0] . '">back</a>');
             }
         }
-
-        if(isset($_POST['newFolder']) && $_POST['newFolder'] !== ""){
-            // mkdir($dir . '/' . $_POST['newFolder']);
-            echo '<h1>' . $_POST['newFolder'] . '</h1>';
-        };
         ?>
-        <form method="post" action="<?php echo $dir ?>">
+        <form method="post" action="<?php echo $uri ?>">
             <div class="col-2 mb-2">
                 <input type="text" name="newFolder" placeholder="Make new directory" class="form-control">
             </div>
