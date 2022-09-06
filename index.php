@@ -1,3 +1,9 @@
+<?php
+
+declare(strict_types=1);
+require_once('lib.php');
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -31,27 +37,54 @@
                 <?php
                 $uri = $_SERVER['REQUEST_URI'];
                 $dir = isset($_GET['path']) ? "./" . $_GET['path'] : "./";
+
                 $files = scandir($dir);
 
                 foreach ($files as $value) {
                     if ($value != "." and $value != "..") {
-
-                        is_dir($value) ? $fileType = "Directory" : $fileType = "File";
-                        print("<tr><td>$fileType</td>");
+                        // var_dump($dir . $value);
+                        // echo '<br>';
+                        $isDir = is_dir($dir . '/' . $value) ? 'Directory' : 'File';
+                        print("<tr><td>" . $isDir . "</td>");
+                        $linkValue = ($_SERVER['QUERY_STRING'] === "")
+                            ? '<a href="' . './?'  . 'path=' . $value . '">' . $value . '</a>'
+                            : '<a href="' . './?' . $_SERVER['QUERY_STRING'] . '/' . $value . '">' . $value . '</a>';
                         print("<td>");
-                        is_dir($value) ? print ('<a href="' . $dir . '?path=/' . $value . '">' . $value . '</a>') : print($value);
+                        is_dir($dir . '/' . $value) ? print($linkValue) : print($value);
                         print("</td>");
-
-                        print('<td><button class="btn btn-primary">Delete</button></td>');
+                        !is_dir($dir . '/' . $value)
+                            ? print('<td><button class="btn btn-primary">Delete</button></td>')
+                            : print("<td></td>");
                         print('</tr>');
                     }
                 };
                 ?>
             </tbody>
         </table>
-        <?php 
-         print('<a href="' . $files[0] . '">back</a>');
+
+        <?php
+
+        if (isset($_GET['path'])) {
+            $paths = explode('/', $_GET['path']);
+            $lastPath = end($paths);
+            if (count($paths) > 1) {
+                print('<a href="' . str_replace('/' . $lastPath, "", $uri) . '">back</a>');
+            } else {
+                print('<a href="' . $files[0] . '">back</a>');
+            }
+        }
+
+        if(isset($_POST['newFolder']) && $_POST['newFolder'] !== ""){
+            // mkdir($dir . '/' . $_POST['newFolder']);
+            echo '<h1>' . $_POST['newFolder'] . '</h1>';
+        };
         ?>
+        <form method="post" action="<?php echo $dir ?>">
+            <div class="col-2 mb-2">
+                <input type="text" name="newFolder" placeholder="Make new directory" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
     </div>
 
 </body>
@@ -60,15 +93,20 @@
 
 <?php
 print('<br>');
-print_r($uri);
+print('Key path: ' . ($_GET['path'] ?? "empty"));
+print('<br>');
+print('POST: ' . ($_POST['newFolder'] ?? "empty"));
+print('<br>');
+print('Uri: ' . $uri);
 print('<br>');
 print('<br>');
-print_r($dir);
+print_r('Dir: ' . $dir);
 print('<br>');
 print('<pre>');
-// $_SERVER['QUERY_STRING'] = "/?xx";
+// $_SERVER['QUERY_STRING'];
 // print_r($_SERVER);
-print_r($_GET['path']);
+// print_r($_GET['path']);
 // print(isset($_GET[‘x’]));
 print('</pre>');
+// onsubmit=createFolder(  php tag print($_POST('newFolder') . ',' . $dir);
 ?>
