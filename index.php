@@ -4,18 +4,25 @@ declare(strict_types=1);
 require_once('lib.php');
 $uri = $_SERVER['REQUEST_URI'];
 $dir = isset($_GET['path']) ? "./" . $_GET['path'] : "./";
-
-
-if (isset($_POST['newFolder']) && $_POST['newFolder'] !== "") {
-    mkdir($dir . '/' . $_POST['newFolder']);
-    // echo '<h1>' . $_POST['newFolder'] . '</h1>';
-};
+$errorMsg = "";
+$errorMsg2 = "";
 
 if (isset($_POST['delete']) && $_POST['delete'] !== "") {
     $delItem = $_POST['delete'];
-    echo '<h1> Deleted' . $_POST['delete'] . '</h1>';
-    if($delItem !== "./index.php" && $delItem !== "./README.MD" && $delItem !== "./lib.php" ){
+    if ($delItem !== "./index.php" && $delItem !== "./README.md" && $delItem !== "./lib.php") {
         unlink($delItem);
+    } else {
+        $errorMsg2 = '<p class="text-danger text-center m-0">You can\'t delete this directory</p>';
+    }
+};
+
+if (isset($_POST['newFolder']) && $_POST['newFolder'] !== "") {
+    $newFold = $_POST['newFolder'];
+    $allFolders = scandir($dir);
+    if (!in_array($newFold, $allFolders)) {
+        mkdir($dir . '/' . $newFold);
+    } else {
+        $errorMsg = '<span class="text-danger">Directory name already exist</span>';
     }
 };
 
@@ -54,8 +61,6 @@ $files = scandir($dir);
                 <?php
                 foreach ($files as $value) {
                     if ($value != "." and $value != "..") {
-                        // var_dump($dir . $value);
-                        // echo '<br>';
                         $isDir = is_dir($dir . '/' . $value) ? 'Directory' : 'File';
                         print("<tr><td>" . $isDir . "</td>");
                         $linkValue = ($_SERVER['QUERY_STRING'] === "")
@@ -66,8 +71,7 @@ $files = scandir($dir);
                         print("</td>");
                         !is_dir($dir . '/' . $value)
                             ? print('<td><form method="post">
-                            <input class="btn btn-primary" type="submit" value="delete">
-                            <input type="hidden" value="' . $dir . $value .'" name="delete">
+                            <button class="btn btn-primary" value="' . $dir . $value . '" name="delete" >Delete </button>
                             </form></td>')
                             : print("<td></td>");
                         print('</tr>');
@@ -76,20 +80,20 @@ $files = scandir($dir);
                 ?>
             </tbody>
         </table>
-
         <?php
-        //
+        (print ($errorMsg2) ?? "");
         if (isset($_GET['path'])) {
             $paths = explode('/', $_GET['path']);
             $lastPath = end($paths);
             if (count($paths) > 1) {
-                print('<a href="' . str_replace('/' . $lastPath, "", $uri) . '">back</a>');
+                print('<div class="my-2"><a href="' . str_replace('/' . $lastPath, "", $uri) . '">back</a></div>');
             } else {
-                print('<a href="' . $files[0] . '">back</a>');
+                print('<div class="my-2"><a href="' . $files[0] . '">back</a></div>');
             }
         }
         ?>
         <form method="post" action="<?php echo $uri ?>">
+            <?php print ($errorMsg) ?? ""; ?>
             <div class="col-2 mb-2">
                 <input type="text" name="newFolder" placeholder="Make new directory" class="form-control">
             </div>
@@ -102,16 +106,16 @@ $files = scandir($dir);
 </html>
 
 <?php
-print('<br>');
-print('Key path: ' . ($_GET['path'] ?? "empty"));
-print('<br>');
-print('POST: ' . ($_POST['newFolder'] ?? "empty"));
-print('<br>');
-print('Uri: ' . $uri);
-print('<br>');
-print('<br>');
-print_r('Dir: ' . $dir);
-print('<br>');
+// print('<br>');
+// print('Key path: ' . ($_GET['path'] ?? "empty"));
+// print('<br>');
+// print('POST: ' . ($_POST['newFolder'] ?? "empty"));
+// print('<br>');
+// print('Uri: ' . $uri);
+// print('<br>');
+// print('<br>');
+// print_r('Dir: ' . $dir);
+// print('<br>');
 print('<pre>');
 // $_SERVER['QUERY_STRING'];
 // print_r($_SERVER);
