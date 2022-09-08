@@ -6,16 +6,24 @@ $uri = $_SERVER['REQUEST_URI'];
 $dir = isset($_GET['path']) ? "./" . $_GET['path'] : "./";
 $errorMsg = "";
 $errorMsg2 = "";
-
-if (isset($_POST['delete']) && $_POST['delete'] !== "") {
+$pageContentVisibility = "visibility: hidden";
+$loginVisibility = "visibility: visible";
+session_start();
+// LOGOUT LOGIC
+if (isset($_POST['logout'])) {
+    session_destroy();
+    session_start();
+}
+//DELETE FILE LOGIC
+if (isset($_POST['delete']) && $_POST['delete'] !== "" && $_POST['delete'] !== " ") {
     $delItem = $_POST['delete'];
     if ($delItem !== "./index.php" && $delItem !== "./README.md" && $delItem !== "./lib.php") {
         unlink($delItem);
     } else {
-        $errorMsg2 = '<p class="text-danger text-center m-0">You can\'t delete this directory</p>';
+        $errorMsg2 = '<p class="text-danger text-center m-0">You can\'t delete this file</p>';
     }
 };
-
+//CREATE FOLDER LOGIC
 if (isset($_POST['newFolder']) && $_POST['newFolder'] !== "") {
     $newFold = $_POST['newFolder'];
     $allFolders = scandir($dir);
@@ -24,7 +32,28 @@ if (isset($_POST['newFolder']) && $_POST['newFolder'] !== "") {
     } else {
         $errorMsg = '<span class="text-danger">Directory name already exist</span>';
     }
+} else if (isset($_POST['newFolder']) && $_POST['newFolder'] == "") {
+    $errorMsg = '<span class="text-danger">Imput field must not be empty</span>';
 };
+//LOGIN LOGIC
+$loginErrorMessage = '';
+if (isset($_POST['login']) && !empty($_POST['userName']) && !empty($_POST['password'])) {
+    if ($_POST['userName'] == 'Martin' && $_POST['password'] == '1234') {
+        $_SESSION['logged_in'] = true;
+        $_SESSION['timeout'] = time();
+        $_SESSION['userName'] = $_POST['userName'];
+    } else {
+        $loginErrorMessage = 'Wrong username or password';
+    }
+}
+// SESSION LOGIC
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == "login") {
+    $pageContentVisibility = "visibility: visible";
+    $loginVisibility = "display: none";
+} else {
+    $pageContentVisibility = "display: none";
+    $loginVisibility = "visibility: visible";
+}
 
 $files = scandir($dir);
 ?>
@@ -35,34 +64,61 @@ $files = scandir($dir);
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- CSS only -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato&family=Raleway:wght@500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
     <title>File explorer</title>
+    <style>
+        body {
+            font-family: 'Lato', sans-serif;
+        }
+
+        h1 {
+            font-family: 'Lato', sans-serif;
+            font-family: 'Raleway', sans-serif;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container">
+    <!-- LOGIN FORM -->
+    <div class="loginForm mt-5 ms-5 col-3 ps-3" style="<?php print($loginVisibility) ?>">
+        <h1 class="fw-bold mb-4">Welcome to file explorer</h1>
+        <form method="post" action="<?php echo $uri ?>">
+            <span class="text-danger"><?php print($loginErrorMessage) ?></span>
+            <div>
+                <label id="userName">Username</label>
+                <input class="form-control" type="text" name="userName" placeholder="User name is Martin" required>
+            </div>
+            <div>
+                <label id="password">Password</label>
+                <input class="form-control" type="password" name="password" placeholder="Password is 1234" required>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3" name="login">Submit</button>
+
+        </form>
+
+    </div>
+    <!-- PAGE AFTER SUCCESSFUL LOGIN -->
+    <div class="container" style="<?php print($pageContentVisibility) ?>">
         <h1 class="text-center">Directory contens: <?php print($_SERVER['REQUEST_URI']) ?></h1>
         <table class="table table-hover">
             <thead class="table-primary">
                 <tr>
-                    <th scope="col">
-                        Type
-                    </th>
-                    <th scope="col">
-                        Name
-                    </th>
-                    <th scope="col">
-                        Actions
-                    </th>
+                    <th scope="col"> Type</th>
+                    <th scope="col">Name</th>
+                    <th scope="col"> Actions </th>
                 </tr>
             </thead>
             <tbody>
                 <?php
+                // Table creation for all files and directories in current directory.
                 foreach ($files as $value) {
                     if ($value != "." and $value != "..") {
                         $isDir = is_dir($dir . '/' . $value) ? 'Directory' : 'File';
-                        print("<tr><td>" . $isDir . "</td>");
+                        print("<tr> <form method=\"post\"><td>" . $isDir . "</td>");
                         $linkValue = ($_SERVER['QUERY_STRING'] === "")
                             ? '<a href="' . $uri . '?path=' . $value . '">' . $value . '</a>'
                             : '<a href="' . $uri . '/' . $value . '">' . $value . '</a>';
@@ -70,11 +126,11 @@ $files = scandir($dir);
                         is_dir($dir . '/' . $value) ? print($linkValue) : print($value);
                         print("</td>");
                         !is_dir($dir . '/' . $value)
-                            ? print('<td><form method="post">
+                            ? print('<td>
                             <button class="btn btn-primary" value="' . $dir . $value . '" name="delete" >Delete </button>
-                            </form></td>')
-                            : print("<td></td>");
-                        print('</tr>');
+                            </td>')
+                            : print("<td> </td>");
+                        print('</form></tr>');
                     }
                 };
                 ?>
@@ -82,22 +138,30 @@ $files = scandir($dir);
         </table>
         <?php
         (print ($errorMsg2) ?? "");
+        //BACK BUTTON
         if (isset($_GET['path'])) {
             $paths = explode('/', $_GET['path']);
             $lastPath = end($paths);
             if (count($paths) > 1) {
-                print('<div class="my-2"><a href="' . str_replace('/' . $lastPath, "", $uri) . '">back</a></div>');
+                print('<div class="my-2"><a href="' . str_replace('/' . $lastPath, "", $uri) . '"><button class="btn btn-primary">Back</button></a></div>');
             } else {
-                print('<div class="my-2"><a href="' . $files[0] . '">back</a></div>');
+                print('<div class="my-2"><a href="' . $files[0] . '"><button class="btn btn-primary">Back</button></a></div>');
             }
         }
         ?>
+        <!--NEW DIRECTORY CREATION FORM  -->
+        <div class="col-3 text-end">
+            <form method="post" action="<?php echo $uri ?>">
+                <?php print ($errorMsg) ?? ""; ?>
+                <div class="col-12 mb-2">
+                    <input type="text" name="newFolder" placeholder="Make new directory" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+        <!-- LOGOUT FORM -->
         <form method="post" action="<?php echo $uri ?>">
-            <?php print ($errorMsg) ?? ""; ?>
-            <div class="col-2 mb-2">
-                <input type="text" name="newFolder" placeholder="Make new directory" class="form-control">
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button class="btn btn-warning mt-2 p-1" type="submit" name="logout" value="logout">LOG OUT</button>
         </form>
     </div>
 
@@ -116,6 +180,9 @@ $files = scandir($dir);
 // print('<br>');
 // print_r('Dir: ' . $dir);
 // print('<br>');
+// var_dump($_POST['login']);
+// echo $_POST['userName'];
+// echo $_POST['password'];
 print('<pre>');
 // $_SERVER['QUERY_STRING'];
 // print_r($_SERVER);
