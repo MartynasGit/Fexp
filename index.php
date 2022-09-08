@@ -2,13 +2,39 @@
 
 declare(strict_types=1);
 require_once('lib.php');
+session_start();
 $uri = $_SERVER['REQUEST_URI'];
 $dir = isset($_GET['path']) ? "./" . $_GET['path'] : "./";
-$errorMsg = "";
-$errorMsg2 = "";
-$pageContentVisibility = "visibility: hidden";
-$loginVisibility = "visibility: visible";
-session_start();
+$errorMsg; //Error message for form creation imput field.
+$errorMsg2; // Error message for Imput fields .
+$errorMsg3; // Error message for upload form.
+$pageContentVisibility;
+$loginVisibility;
+
+//UPLOAD LOGIC
+if (isset($_FILES['file'])) {
+    $errors = [];
+    $file_name =  $_FILES['file']['name'];
+    $file_size = $_FILES['file']['size'];
+    $file_tmp = $_FILES['file']['tmp_name'];
+    $file_type = $_FILES['file']['type'];
+
+    $file_name_arr = explode('.', $file_name);
+    $file_ext = strtolower(end($file_name_arr));
+
+    $extensions = ['jpeg', 'jpg', 'png', 'json', 'pdf', 'zip', 'txt'];
+
+    if (!in_array($file_ext, $extensions)) {
+        $errorMsg3[] = "File type is not alowed";
+    }
+    if ($file_size > 2097152) {
+        $errorMsg3[] = "File size is too big! File size must be under 2MB";
+    }
+    if (!empty($errors)) {
+        move_uploaded_file($file_tmp, $dir . "/" . $file_name);
+    }
+}
+
 // LOGOUT LOGIC
 if (isset($_POST['logout'])) {
     session_destroy();
@@ -20,7 +46,7 @@ if (isset($_POST['delete']) && $_POST['delete'] !== "" && $_POST['delete'] !== "
     if ($delItem !== "./index.php" && $delItem !== "./README.md" && $delItem !== "./lib.php") {
         unlink($delItem);
     } else {
-        $errorMsg2 = '<p class="text-danger text-center m-0">You can\'t delete this file</p>';
+        $errorMsg2 = '<h5 class="text-danger text-center m-0 mb-2">You can\'t delete this file</h5>';
     }
 };
 //CREATE FOLDER LOGIC
@@ -30,7 +56,7 @@ if (isset($_POST['newFolder']) && $_POST['newFolder'] !== "") {
     if (!in_array($newFold, $allFolders)) {
         mkdir($dir . '/' . $newFold);
     } else {
-        $errorMsg = '<span class="text-danger">Directory name already exist</span>';
+        $errorMsg = '<span class="text-danger ps-2">Directory name already exist</span>';
     }
 } else if (isset($_POST['newFolder']) && $_POST['newFolder'] == "") {
     $errorMsg = '<span class="text-danger">Imput field must not be empty</span>';
@@ -39,14 +65,13 @@ if (isset($_POST['newFolder']) && $_POST['newFolder'] !== "") {
 $loginErrorMessage = '';
 if (isset($_POST['login']) && !empty($_POST['userName']) && !empty($_POST['password'])) {
     if ($_POST['userName'] == 'Martin' && $_POST['password'] == '1234') {
-        $_SESSION['logged_in'] = true;
-        $_SESSION['timeout'] = time();
+        $_SESSION['logged_in'] = 'login';
         $_SESSION['userName'] = $_POST['userName'];
     } else {
         $loginErrorMessage = 'Wrong username or password';
     }
 }
-// SESSION LOGIC
+// PAGE DISPLAY LOGIC
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == "login") {
     $pageContentVisibility = "visibility: visible";
     $loginVisibility = "display: none";
@@ -54,8 +79,8 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == "login") {
     $pageContentVisibility = "display: none";
     $loginVisibility = "visibility: visible";
 }
-
 $files = scandir($dir);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -84,7 +109,7 @@ $files = scandir($dir);
 
 <body>
     <!-- LOGIN FORM -->
-    <div class="loginForm mt-5 ms-5 col-3 ps-3" style="<?php print($loginVisibility) ?>">
+    <div class="mt-5 ms-5 col-3 ps-3" style="<?php print($loginVisibility) ?>">
         <h1 class="fw-bold mb-4">Welcome to file explorer</h1>
         <form method="post" action="<?php echo $uri ?>">
             <span class="text-danger"><?php print($loginErrorMessage) ?></span>
@@ -97,7 +122,6 @@ $files = scandir($dir);
                 <input class="form-control" type="password" name="password" placeholder="Password is 1234" required>
             </div>
             <button type="submit" class="btn btn-primary mt-3" name="login">Submit</button>
-
         </form>
 
     </div>
@@ -114,11 +138,11 @@ $files = scandir($dir);
             </thead>
             <tbody>
                 <?php
-                // Table creation for all files and directories in current directory.
+                // Table row creation for all files and directories in current directory.
                 foreach ($files as $value) {
                     if ($value != "." and $value != "..") {
                         $isDir = is_dir($dir . '/' . $value) ? 'Directory' : 'File';
-                        print("<tr> <form method=\"post\"><td>" . $isDir . "</td>");
+                        print('<tr> <form method="post"><td>' . $isDir . '</td>');
                         $linkValue = ($_SERVER['QUERY_STRING'] === "")
                             ? '<a href="' . $uri . '?path=' . $value . '">' . $value . '</a>'
                             : '<a href="' . $uri . '/' . $value . '">' . $value . '</a>';
@@ -127,7 +151,7 @@ $files = scandir($dir);
                         print("</td>");
                         !is_dir($dir . '/' . $value)
                             ? print('<td>
-                            <button class="btn btn-primary" value="' . $dir . $value . '" name="delete" >Delete </button>
+                            <button class="btn btn-primary" value="' . $dir . "/" . $value . '" name="delete" >Delete </button>
                             </td>')
                             : print("<td> </td>");
                         print('</form></tr>');
@@ -149,15 +173,31 @@ $files = scandir($dir);
             }
         }
         ?>
-        <!--NEW DIRECTORY CREATION FORM  -->
-        <div class="col-3 text-end">
-            <form method="post" action="<?php echo $uri ?>">
+        <div class="d-flex gap-5">
+            <!--NEW DIRECTORY CREATION FORM  -->
+            <div class="col-3 me-5">
                 <?php print ($errorMsg) ?? ""; ?>
-                <div class="col-12 mb-2">
-                    <input type="text" name="newFolder" placeholder="Make new directory" class="form-control">
-                </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </form>
+                <span class="fw-bold"> Create new directory</span>
+                <form method="post" action="<?php echo $uri ?>" class="text-end">
+                    <div class="col-12 mb-2">
+                        <input type="text" name="newFolder" placeholder="Your new folder's name" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+            <!-- FILE UPLOAD FORM -->
+            <div class="col-3 ms-5">
+                <span class="fw-bold">Upload file</span>
+                <form action="" method="post" enctype="multipart/form-data" class="text-end">
+                    <input type="file" name="file" class="form-control mb-2">
+                    <button class="btn btn-primary">Submit</button>
+                </form>
+                <?php if (!empty($errorMsg3)) {
+                    foreach ($errorMsg3 as $error) {
+                        print('<p class="text-danger">' . $error . '</p>');
+                    }
+                } ?>
+            </div>
         </div>
         <!-- LOGOUT FORM -->
         <form method="post" action="<?php echo $uri ?>">
@@ -185,7 +225,7 @@ $files = scandir($dir);
 // echo $_POST['password'];
 print('<pre>');
 // $_SERVER['QUERY_STRING'];
-// print_r($_SERVER);
+// print_r($_POST['delete']);
 // print_r($_GET['path']);
 // print(isset($_GET[‘x’]));
 print('</pre>');
