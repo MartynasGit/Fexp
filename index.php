@@ -70,11 +70,9 @@ if (isset($_POST['login']) && !empty($_POST['userName']) && !empty($_POST['passw
 }
 // PAGE DISPLAY LOGIC
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == "login") {
-    $pageContentVisibility = "visibility: visible";
     $loginVisibility = "display: none";
 } else {
     $pageContentVisibility = "display: none";
-    $loginVisibility = "visibility: visible";
 }
 $files = scandir($dir);
 
