@@ -1,6 +1,5 @@
 <?php
 
-declare(strict_types=1);
 require_once('lib.php');
 session_start();
 $uri = $_SERVER['REQUEST_URI'];
@@ -13,7 +12,6 @@ $loginVisibility;
 
 //UPLOAD LOGIC
 if (isset($_FILES['file'])) {
-    $errors = [];
     $file_name =  $_FILES['file']['name'];
     $file_size = $_FILES['file']['size'];
     $file_tmp = $_FILES['file']['tmp_name'];
@@ -30,11 +28,17 @@ if (isset($_FILES['file'])) {
     if ($file_size > 2097152) {
         $errorMsg3[] = "File size is too big! File size must be under 2MB";
     }
-    if (!empty($errors)) {
+    if (empty($errorMsg3)) {
         move_uploaded_file($file_tmp, $dir . "/" . $file_name);
+        print('succsess');
     }
 }
-
+//DOWNLOAD LOGIC
+if (isset($_POST['download'])) {
+    $file = $_POST['download'];
+    $fileToDownloadEscaped = str_replace("&nbsp;", " ", htmlentities($file, 0, 'utf-8'));
+    downloadHeaders($fileToDownloadEscaped); // Function called form lib.php
+}
 // LOGOUT LOGIC
 if (isset($_POST['logout'])) {
     session_destroy();
@@ -98,10 +102,6 @@ $files = scandir($dir);
     <style>
         body {
             font-family: 'Lato', sans-serif;
-        }
-
-        h1 {
-            font-family: 'Lato', sans-serif;
             font-family: 'Raleway', sans-serif;
         }
     </style>
@@ -127,6 +127,10 @@ $files = scandir($dir);
     </div>
     <!-- PAGE AFTER SUCCESSFUL LOGIN -->
     <div class="container" style="<?php print($pageContentVisibility) ?>">
+        <!-- LOGOUT FORM -->
+        <form method="post" action="<?php echo $uri ?>" class="text-end">
+            <button class="btn btn-warning mt-2 p-1" type="submit" name="logout" value="logout">LOG OUT</button>
+        </form>
         <h1 class="text-center">Directory contens: <?php print($_SERVER['REQUEST_URI']) ?></h1>
         <table class="table table-hover">
             <thead class="table-primary">
@@ -152,6 +156,7 @@ $files = scandir($dir);
                         !is_dir($dir . '/' . $value)
                             ? print('<td>
                             <button class="btn btn-primary" value="' . $dir . "/" . $value . '" name="delete" >Delete </button>
+                            <button class="btn btn-primary" value="' . $dir . "/" . $value . '" name="download" >Download </button>
                             </td>')
                             : print("<td> </td>");
                         print('</form></tr>');
@@ -199,35 +204,8 @@ $files = scandir($dir);
                 } ?>
             </div>
         </div>
-        <!-- LOGOUT FORM -->
-        <form method="post" action="<?php echo $uri ?>">
-            <button class="btn btn-warning mt-2 p-1" type="submit" name="logout" value="logout">LOG OUT</button>
-        </form>
     </div>
 
 </body>
 
 </html>
-
-<?php
-// print('<br>');
-// print('Key path: ' . ($_GET['path'] ?? "empty"));
-// print('<br>');
-// print('POST: ' . ($_POST['newFolder'] ?? "empty"));
-// print('<br>');
-// print('Uri: ' . $uri);
-// print('<br>');
-// print('<br>');
-// print_r('Dir: ' . $dir);
-// print('<br>');
-// var_dump($_POST['login']);
-// echo $_POST['userName'];
-// echo $_POST['password'];
-print('<pre>');
-// $_SERVER['QUERY_STRING'];
-// print_r($_POST['delete']);
-// print_r($_GET['path']);
-// print(isset($_GET[‘x’]));
-print('</pre>');
-// onsubmit=createFolder(  php tag print($_POST('newFolder') . ',' . $dir);
-?>
