@@ -40,7 +40,7 @@ if (isset($_POST['logout'])) {
 //DELETE FILE LOGIC
 if (isset($_POST['delete']) && $_POST['delete'] !== "" && $_POST['delete'] !== " ") {
     $delItem = $_POST['delete'];
-    if ($delItem !== "./index.php" && $delItem !== "./README.md" && $delItem !== "./lib.php") {
+    if ($delItem !== ".//index.php" && $delItem !== ".//README.md" && $delItem !== ".//lib.php") {
         unlink($delItem);
     } else {
         $errorMsg2 = '<h5 class="text-danger text-center m-0 mb-2">You can\'t delete this file</h5>';

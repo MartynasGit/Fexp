@@ -24,6 +24,8 @@ Folowing steps works with XAMPP.
 - To open page go to http//localhost/EXP
 
 # Author
-Project is created by Martynas Gumuliauskas. 
+Project is created by Martynas Gumuliauskas.
+ 
 Github - MartynasGit.
+
 Linkedin - https://www.linkedin.com/in/martynasgum/.
