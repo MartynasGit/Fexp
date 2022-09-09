@@ -16,22 +16,15 @@ if (isset($_FILES['file'])) {
     $file_size = $_FILES['file']['size'];
     $file_tmp = $_FILES['file']['tmp_name'];
     $file_type = $_FILES['file']['type'];
-
     $file_name_arr = explode('.', $file_name);
     $file_ext = strtolower(end($file_name_arr));
-
     $extensions = ['jpeg', 'jpg', 'png', 'json', 'pdf', 'zip', 'txt'];
-
-    if (!in_array($file_ext, $extensions)) {
+    if (!in_array($file_ext, $extensions) && $file_name !== "") {
         $errorMsg3[] = "File type is not alowed";
     }
-    if ($file_size > 2097152) {
-        $errorMsg3[] = "File size is too big! File size must be under 2MB";
-    }
-    if (empty($errorMsg3)) {
-        move_uploaded_file($file_tmp, $dir . "/" . $file_name);
-        print('succsess');
-    }
+    $file_name == "" && $errorMsg3[] = "No file chosen to upload !";
+    $file_size > 2097152 && $errorMsg3[] = "File size is too big! File size must be under 2MB";
+    empty($errorMsg3) && move_uploaded_file($file_tmp, $dir . "/" . $file_name);
 }
 //DOWNLOAD LOGIC
 if (isset($_POST['download'])) {
@@ -60,10 +53,10 @@ if (isset($_POST['newFolder']) && $_POST['newFolder'] !== "") {
     if (!in_array($newFold, $allFolders)) {
         mkdir($dir . '/' . $newFold);
     } else {
-        $errorMsg = '<span class="text-danger ps-2">Directory name already exist</span>';
+        $errorMsg = '<span class="text-danger ps-2">Directory name already exist !</span>';
     }
 } else if (isset($_POST['newFolder']) && $_POST['newFolder'] == "") {
-    $errorMsg = '<span class="text-danger">Imput field must not be empty</span>';
+    $errorMsg = '<span class="text-danger">Imput field must not be empty !</span>';
 };
 //LOGIN LOGIC
 $loginErrorMessage = '';
@@ -98,7 +91,7 @@ $files = scandir($dir);
     <link href="https://fonts.googleapis.com/css2?family=Lato&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Lato&family=Raleway:wght@500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
-    <title>File explorer</title>
+    <title>File Explorer</title>
     <style>
         body {
             font-family: 'Lato', sans-serif;
@@ -110,7 +103,7 @@ $files = scandir($dir);
 <body>
     <!-- LOGIN FORM -->
     <div class="mt-5 ms-5 col-3 ps-3" style="<?php print($loginVisibility) ?>">
-        <h1 class="fw-bold mb-4">Welcome to file explorer</h1>
+        <h1 class="fw-bold mb-4">Welcome to File Explorer</h1>
         <form method="post" action="<?php echo $uri ?>">
             <span class="text-danger"><?php print($loginErrorMessage) ?></span>
             <div>
@@ -131,7 +124,7 @@ $files = scandir($dir);
         <form method="post" action="<?php echo $uri ?>" class="text-end">
             <button class="btn btn-warning mt-2 p-1" type="submit" name="logout" value="logout">LOG OUT</button>
         </form>
-        <h1 class="text-center">Directory contens: <?php print($_SERVER['REQUEST_URI']) ?></h1>
+        <h1 class="text-start">Directory: <?php print($_SERVER['REQUEST_URI']) ?></h1>
         <table class="table table-hover">
             <thead class="table-primary">
                 <tr>
@@ -181,14 +174,14 @@ $files = scandir($dir);
         <div class="d-flex gap-5">
             <!--NEW DIRECTORY CREATION FORM  -->
             <div class="col-3 me-5">
-                <?php print ($errorMsg) ?? ""; ?>
-                <span class="fw-bold"> Create new directory</span>
+                <p class="fw-bold p-0 m-0 ps-2"> Create new directory</p>
                 <form method="post" action="<?php echo $uri ?>" class="text-end">
                     <div class="col-12 mb-2">
                         <input type="text" name="newFolder" placeholder="Your new folder's name" class="form-control">
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
+                <?php print ($errorMsg) ?? ""; ?>
             </div>
             <!-- FILE UPLOAD FORM -->
             <div class="col-3 ms-5">
