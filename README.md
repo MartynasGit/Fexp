@@ -21,11 +21,12 @@ Folowing steps works with XAMPP.
 - Run XAMPP and start "Apache" Module.
 - Find where XAMPP is instaled on your device and open "htdocs" folder.
 - Clone repository inside new created folder.
-- To open page go to http//localhost/EXP
+- To open page go to http//localhost/Fexp
+- For Login form use username and password writen in input's placeholders.
 
-# Author
+## Author
 Project is created by Martynas Gumuliauskas.
- 
+
 Github - MartynasGit.
 
 Linkedin - https://www.linkedin.com/in/martynasgum/.
