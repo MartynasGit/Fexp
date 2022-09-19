@@ -172,7 +172,7 @@ $files = scandir($dir);
         <div class="d-flex gap-5">
             <!--NEW DIRECTORY CREATION FORM  -->
             <div class="col-3 me-5">
-                <p class="fw-bold p-0 m-0 ps-2"> Create new directory</p>
+                <span class="fw-bold p-0 m-0 ps-2"> Create new directory</span>
                 <form method="post" action="<?php echo $uri ?>" class="text-end">
                     <div class="col-12 mb-2">
                         <input type="text" name="newFolder" placeholder="Your new folder's name" class="form-control">
@@ -183,7 +183,7 @@ $files = scandir($dir);
             </div>
             <!-- FILE UPLOAD FORM -->
             <div class="col-3 ms-5">
-                <span class="fw-bold">Upload file</span>
+                <span class="fw-bold ps-2">Upload file</span>
                 <form action="" method="post" enctype="multipart/form-data" class="text-end">
                     <input type="file" name="file" class="form-control mb-2">
                     <button class="btn btn-primary">Submit</button>
